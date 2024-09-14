@@ -18,6 +18,13 @@ const uploadVideo = async (req, res, handleErr) => {
   const extension = path.extname(specifiedFileName).substring(1).toLowerCase();
   const name = path.parse(specifiedFileName).name;
   const videoId = crypto.randomBytes(4).toString("hex");
+  const FORMATS_SUPPORTED_TYPE = ["mov", "mp4"];
+  if (FORMATS_SUPPORTED_TYPE.indexOf(extension) == -1) {
+    return handleErr({
+      status: 400,
+      message: "Only these formats are allowed: mov, mp4",
+    });
+  }
   try {
     await fs.mkdir(`./storage/${videoId}`);
     const fullPath = `./storage/${videoId}/original.${extension}`; // store the video file
@@ -43,7 +50,7 @@ const uploadVideo = async (req, res, handleErr) => {
       resizes: {},
     });
     DB.save();
-    res.status(200).json({
+    res.status(201).json({
       status: "success",
       message: "The file was uploaded successfully!",
     });
