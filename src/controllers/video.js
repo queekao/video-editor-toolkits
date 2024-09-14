@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const fs = require("fs/promises");
 const { pipeline } = require("stream/promises");
 const util = require("../../lib/util");
+const FF = require("../../lib/FF");
 const DB = require("../DB");
 const getVideos = (req, res, handleErr) => {
   const name = req.params.get("name");
@@ -22,9 +23,12 @@ const uploadVideo = async (req, res, handleErr) => {
     const fullPath = `./storage/${videoId}/original.${extension}`; // store the video file
     const file = await fs.open(fullPath, "w");
     const fileStream = file.createWriteStream();
+    const thumbnailPath = `./storage/${videoId}/thumbnail.jpg`;
     await pipeline(req, fileStream);
     // Make a thumbnail and the video file.
+    await FF.makeThumbnail(fullPath, thumbnailPath);
     // Get the dimesions.
+    const dimesion = await FF.getDimesions(fullPath);
     // After we finish uploading we save data to database.
     DB.update();
     DB.videos.unshift({
@@ -34,6 +38,8 @@ const uploadVideo = async (req, res, handleErr) => {
       extension,
       userId: req.userId,
       extractedAudio: false,
+      dimesion,
+      thumbnail: thumbnailPath,
       resizes: {},
     });
     DB.save();

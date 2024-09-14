@@ -1,11 +1,16 @@
 [
     {
         "id": 0,
-        "videoId": "e152c929",
+        "videoId": "98305ac3",
         "name": "quee kao 2",
         "extension": "mov",
         "userId": 1,
         "extractedAudio": false,
+        "dimesion": {
+            "width": 1920,
+            "height": 1080
+        },
+        "thumbnail": "./storage/98305ac3/thumbnail.jpg",
         "resizes": {}
     }
 ]
