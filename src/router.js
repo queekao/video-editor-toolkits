@@ -25,5 +25,6 @@ module.exports = (server) => {
   server.route("get", "/api/videos", Video.getVideos);
   server.route("get", "/get-video-asset", Video.getVideoAsset);
   server.route("post", "/api/upload-video", Video.uploadVideo);
+  server.route("put", "/api/video/resize", Video.resizeVideo); // we create a new video to that
   server.route("patch", "/api/video/extract-audio", Video.extractAudio);
 };

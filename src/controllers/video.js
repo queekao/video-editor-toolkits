@@ -5,6 +5,8 @@ const { pipeline } = require("stream/promises");
 const util = require("../../lib/util");
 const FF = require("../../lib/FF");
 const DB = require("../DB");
+const JobQueue = require("../../lib/JobQueue");
+const jobQueue = new JobQueue();
 const getVideos = (req, res, handleErr) => {
   DB.update();
   const videos = DB.videos.filter((video) => video.userId === req.userId);
@@ -84,6 +86,30 @@ const extractAudio = async (req, res, handleErr) => {
     return handleErr(error);
   }
 };
+const resizeVideo = async (req, res, handleErr) => {
+  // NOTE: Resize can spend much time if you resize to high resolution video
+  const { height, width, videoId } = req.body;
+  DB.update();
+  const video = DB.videos.find((video) => video.videoId === videoId);
+  if (!video) {
+    return handleErr({
+      status: 404,
+      message: "Video not found!",
+    });
+  }
+  video.resizes[`${width}x${height}`] = { processing: true }; // Processing video resizing
+  DB.save();
+  jobQueue.enqueue({
+    type: "resize",
+    video,
+    width,
+    height,
+  });
+  res.status(200).json({
+    status: "success",
+    message: "The video is now being processed",
+  });
+};
 
 const getVideoAsset = async (req, res, handleErr) => {
   const videoId = req.params.get("videoId");
@@ -110,7 +136,7 @@ const getVideoAsset = async (req, res, handleErr) => {
       filename = `${video.name}-audio.aac`;
       break;
     case "resize":
-      const dimensions = req.params.get("dimension");
+      const dimensions = req.params.get("dimensions");
       file = await fs.open(
         `./storage/${videoId}/${dimensions}.${video.extension}`,
         "r"
@@ -131,6 +157,7 @@ const getVideoAsset = async (req, res, handleErr) => {
   try {
     // Grab the file size
     const stat = await file.stat();
+    console.log(stat);
     const fileStream = file.createReadStream();
     if (type !== "thumbnail") {
       // Download file
@@ -151,6 +178,7 @@ const controller = {
   uploadVideo,
   getVideoAsset,
   extractAudio,
+  resizeVideo,
 };
 
 module.exports = controller;

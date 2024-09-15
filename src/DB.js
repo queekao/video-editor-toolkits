@@ -8,7 +8,7 @@ class DB {
   constructor() {
     /*
      A sample object in this sessions array would look like:
-     { }
+     {"id":0,"videoId":"3b1e6cf6","name":"relax phone 2","extension":"mov","userId":1,"extractedAudio":false,"dimensions":{"width":1920,"height":1080},"thumbnail":"./storage/3b1e6cf6/thumbnail.jpg","resizes":{"400x400":{"processing":false},"600x600":{"processing":false},"500x500":{"processing":false},"300x300":{"processing":false}}}
     */
     this.videos = JSON.parse(fs.readFileSync(videosPath, "utf8"));
 
