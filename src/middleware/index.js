@@ -1,4 +1,5 @@
 const DB = require("../DB");
+const util = require("../../lib/util");
 
 exports.authenticate = (req, res, next) => {
   const routesToAuthenticate = [
@@ -12,7 +13,8 @@ exports.authenticate = (req, res, next) => {
   if (routesToAuthenticate.indexOf(req.method + " " + req.url) !== -1) {
     // If we have a token cookie, then save the userId to the req object
     if (req.headers.cookie) {
-      const token = req.headers.cookie.split("=")[3];
+      const token = util.extractTokenValue(req.headers.cookie);
+      // const token = req.headers.cookie.split("=")[3];
       DB.update();
       const session = DB.sessions.find((session) => session.token === token);
       if (session) {

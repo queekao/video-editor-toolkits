@@ -58,9 +58,71 @@ const uploadVideo = async (req, res, handleErr) => {
     if (error.code !== "ECONNRESET") return handleErr(error);
   }
 };
+const getVideoAsset = async (req, res, handleErr) => {
+  const videoId = req.params.get("videoId");
+  const type = req.params.get("type");
+  DB.update();
+  const video = DB.videos.find((video) => video.videoId === videoId);
+  if (!video) {
+    return handleErr({
+      status: 404,
+      message: "Video not found!",
+    });
+  }
+  let file;
+  let mineType;
+  let filename; // the downloaded filename
+  switch (type) {
+    case "thumbnail":
+      file = await fs.open(`./storage/${videoId}/thumbnail.jpg`, "r");
+      mineType = "image/jpeg";
+      break;
+    case "audio":
+      file = await fs.open(`./storage/${videoId}/audio.aac`, "r");
+      mineType = "audio/aac";
+      filename = `${video.name}-audio.aac`;
+      break;
+    case "resize":
+      const dimensions = req.params.get("dimension");
+      file = await fs.open(
+        `./storage/${videoId}/${dimensions}.${video.extension}`,
+        "r"
+      );
+      mineType = `video/${video.extension}`;
+      filename = `${video.name}-${dimensions}.${video.extension}`;
+      break;
+    case "original":
+      file = await fs.open(
+        `./storage/${videoId}/original.${video.extension}`,
+        "r"
+      );
+      mineType = `video/${video.extension}`;
+      filename = `${video.name}.${video.extension}`;
+    default:
+      break;
+  }
+  try {
+    // Grab the file size
+    const stat = await file.stat();
+    const fileStream = file.createReadStream();
+    if (type !== "thumbnail") {
+      // Download file
+      res.setHeader("Content-Disposition", `attachment; filename=${filename}`);
+    }
+    // Set the Content-Type header based on the file type
+    res.setHeader("Content-Type", mineType);
+    res.setHeader("Content-Length", stat.size);
+    res.status(200);
+    await pipeline(fileStream, res); // serve the asset with stream
+    file.close();
+  } catch (error) {
+    console.error(error);
+  }
+};
 const controller = {
   getVideos,
   uploadVideo,
+  getVideoAsset,
 };
 
 module.exports = controller;
