@@ -157,7 +157,6 @@ const getVideoAsset = async (req, res, handleErr) => {
   try {
     // Grab the file size
     const stat = await file.stat();
-    console.log(stat);
     const fileStream = file.createReadStream();
     if (type !== "thumbnail") {
       // Download file
