@@ -26,6 +26,13 @@ if (cluster.isPrimary) {
         break;
     }
   });
+  cluster.on("exit", (worker, code, signal) => {
+    // Process error handling
+    console.log(
+      `Worker ${worker.process.pid} died (${signal} | ${code}). Restarting...`
+    );
+    cluster.fork();
+  });
 } else {
   require("./index");
 }

@@ -1,10 +1,17 @@
 const path = require("path");
+const cluster = require("cluster");
 const crypto = require("crypto");
 const fs = require("fs/promises");
 const { pipeline } = require("stream/promises");
 const util = require("../../lib/util");
 const FF = require("../../lib/FF");
 const DB = require("../DB");
+const JobQueue = require("../../lib/JobQueue");
+let jobQueue;
+if (cluster.isPrimary) {
+  // Handle not cluster mode
+  jobQueue = new JobQueue();
+}
 const getVideos = (req, res, handleErr) => {
   DB.update();
   const videos = DB.videos.filter((video) => video.userId === req.userId);
@@ -98,7 +105,15 @@ const resizeVideo = async (req, res, handleErr) => {
   video.resizes[`${width}x${height}`] = { processing: true }; // Processing video resizing
   DB.save();
   // `child process` send message to `parent process` to perform resizing
-  process.send({ messageType: "new-resize", data: { video, width, height } });
+  if (!jobQueue)
+    process.send({ messageType: "new-resize", data: { video, width, height } });
+  else
+    jobQueue.enqueue({
+      type: "resize",
+      video,
+      width,
+      height,
+    });
   res.status(200).json({
     status: "success",
     message: "The video is now being processed",
