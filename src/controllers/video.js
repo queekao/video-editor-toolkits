@@ -5,8 +5,6 @@ const { pipeline } = require("stream/promises");
 const util = require("../../lib/util");
 const FF = require("../../lib/FF");
 const DB = require("../DB");
-const JobQueue = require("../../lib/JobQueue");
-const jobQueue = new JobQueue();
 const getVideos = (req, res, handleErr) => {
   DB.update();
   const videos = DB.videos.filter((video) => video.userId === req.userId);
@@ -99,12 +97,8 @@ const resizeVideo = async (req, res, handleErr) => {
   }
   video.resizes[`${width}x${height}`] = { processing: true }; // Processing video resizing
   DB.save();
-  jobQueue.enqueue({
-    type: "resize",
-    video,
-    width,
-    height,
-  });
+  // `child process` send message to `parent process` to perform resizing
+  process.send({ messageType: "new-resize", data: { video, width, height } });
   res.status(200).json({
     status: "success",
     message: "The video is now being processed",
