@@ -2,6 +2,7 @@ const path = require("path");
 const cluster = require("cluster");
 const crypto = require("crypto");
 const fs = require("fs/promises");
+const fsSync = require("fs");
 const { pipeline } = require("stream/promises");
 const util = require("../../lib/util");
 const FF = require("../../lib/FF");
@@ -27,6 +28,16 @@ const getVideos = async (req, res, handleErr) => {
   res.status(200).json(videos);
 };
 const uploadVideo = async (req, res, handleErr) => {
+  const storagePath = "./storage";
+  if (!fsSync.existsSync(storagePath)) {
+    fs.mkdir(storagePath, (err) => {
+      if (err) {
+        console.error("Error creating directory:", err);
+      } else {
+        console.log("Directory created successfully");
+      }
+    });
+  }
   const specifiedFileName = req.headers.filename;
   const extension = path.extname(specifiedFileName).substring(1).toLowerCase();
   const name = path.parse(specifiedFileName).name;
@@ -62,6 +73,7 @@ const uploadVideo = async (req, res, handleErr) => {
       resizes: {},
     });
     DB.save();
+    util.invalidateCache(req.userId.toString());
     res.status(201).json({
       status: "success",
       message: "The file was uploaded successfully!",
@@ -90,6 +102,7 @@ const extractAudio = async (req, res, handleErr) => {
     await FF.extractAudio(originalVideoPath, targetAudioPath);
     video.extractedAudio = true;
     DB.save();
+    util.invalidateCache(req.userId.toString());
     res.status(200).json({
       status: "success",
       message: "The audio was extracted successfully",
@@ -113,6 +126,7 @@ const resizeVideo = async (req, res, handleErr) => {
   video.resizes[`${width}x${height}`] = { processing: true }; // Processing video resizing
   DB.save();
   // `child process` send message to `parent process` to perform resizing
+  if (video.userId) util.invalidateCache(video.userId.toString());
   if (!jobQueue)
     process.send({ messageType: "new-resize", data: { video, width, height } });
   else

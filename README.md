@@ -22,6 +22,13 @@ Before using this template, make sure you have the following toolkits installed:
      brew install ffmpeg
      ```
 
+2. **[redis](https://redis.io/)**: Required for caching.
+
+   - Installation command:
+     ```bash
+     brew install redis
+     ```
+
 ## Configuration
 
 ```plaintext
