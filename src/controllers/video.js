@@ -7,14 +7,23 @@ const util = require("../../lib/util");
 const FF = require("../../lib/FF");
 const DB = require("../DB");
 const JobQueue = require("../../lib/JobQueue");
+
 let jobQueue;
 if (cluster.isPrimary) {
   // Handle not cluster mode
   jobQueue = new JobQueue();
 }
-const getVideos = (req, res, handleErr) => {
+const getVideos = async (req, res, handleErr) => {
   DB.update();
   const videos = DB.videos.filter((video) => video.userId === req.userId);
+  const cacheVideosData = await util.getOrSetCache(
+    req.userId.toString(),
+    videos
+  );
+  if (cacheVideosData) {
+    res.status(200).json(cacheVideosData);
+    return;
+  }
   res.status(200).json(videos);
 };
 const uploadVideo = async (req, res, handleErr) => {
@@ -40,7 +49,6 @@ const uploadVideo = async (req, res, handleErr) => {
     await FF.makeThumbnail(fullPath, thumbnailPath);
     // Get the dimensions.
     const dimensions = await FF.getDimensions(fullPath);
-    // After we finish uploading we save data to database.
     DB.update();
     DB.videos.unshift({
       id: DB.videos.length,

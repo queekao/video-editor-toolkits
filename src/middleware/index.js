@@ -14,7 +14,6 @@ exports.authenticate = (req, res, next) => {
     // If we have a token cookie, then save the userId to the req object
     if (req.headers.cookie) {
       const token = util.extractTokenValue(req.headers.cookie);
-      // const token = req.headers.cookie.split("=")[3];
       DB.update();
       const session = DB.sessions.find((session) => session.token === token);
       if (session) {
