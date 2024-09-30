@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon src/index.js --ignore ./public",
+    "proxy": "nodemon src/proxy.js --ignore ./public",
     "cluster": "nodemon src/cluster.js --ignore ./public"
   },
   "author": "Quee",

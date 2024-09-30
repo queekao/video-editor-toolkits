@@ -1,0 +1,34 @@
+version: "3"
+services:
+  server:
+    environment:
+      - IS_DOCKER=true
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    depends_on:
+      - redis
+    ports:
+      - 8060:8060
+    networks:
+      - app-network
+  compression-nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - 80:80
+    networks:
+      - app-network
+    depends_on:
+      - server
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
