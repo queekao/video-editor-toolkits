@@ -29,6 +29,8 @@ Before using this template, make sure you have the following toolkits installed:
      brew install redis
      ```
 
+3. **[docker](https://www.docker.com/)**: Required for container.
+
 ## Configuration
 
 ```plaintext
@@ -41,7 +43,11 @@ Before using this template, make sure you have the following toolkits installed:
 │   ├── cluster.js               # Basic cluster mode setup
 │   └── DB.js                    # Basic database setup
 ├── storage/                     # For storing the videos
+└── docker-compose.yml           # launching all images with docker-compose
+└── Dockerfile.nginx             # docker image of nginx
+└── Dockerfile.node              # docker image of node server
 └── package.json
+└── proxy.conf                   # Nginx configuration
 ```
 
 ### Install dependencies
@@ -60,4 +66,10 @@ npm run start
 
 ```bash
 npm run cluster
+```
+
+### Launch docker container
+
+```bash
+docker-compose up -d
 ```
