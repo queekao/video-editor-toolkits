@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon src/index.js --ignore ./public",
-    "proxy": "nodemon src/proxy.js --ignore ./public",
+    "start:proxy": "concurrently --kill-others \"nodemon src/proxy.js --ignore ./public\" \"npm run start\"",
+    "cluster:proxy": "concurrently --kill-others \"nodemon src/proxy.js --ignore ./public\" \"npm run cluster\"",
     "cluster": "nodemon src/cluster.js --ignore ./public"
   },
   "author": "Quee",
@@ -13,5 +14,8 @@
   "dependencies": {
     "cpeak": "^1.4.0",
     "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
   }
 }
