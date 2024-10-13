@@ -1,0 +1,110 @@
+{
+    "family": "video-editor",
+    "containerDefinitions": [
+        {
+            "name": "redis",
+            "image": "<account-id>.dkr.ecr.us-east-1.amazonaws.com/video-editor:redis-v1.0.0",
+            "cpu": 256,
+            "memory": 512,
+            "portMappings": [
+                {
+                    "name": "redis-6379-tcp",
+                    "containerPort": 6379,
+                    "hostPort": 6379,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "volumesFrom": [],
+            "systemControls": []
+        },
+        {
+            "name": "node-server",
+            "image": "<account-id>.dkr.ecr.us-east-1.amazonaws.com/video-editor:node-server-v1.0.0",
+            "cpu": 256,
+            "memory": 512,
+            "portMappings": [
+                {
+                    "name": "node-server-8060-tcp",
+                    "containerPort": 8060,
+                    "hostPort": 8060,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "mountPoints": [
+                {
+                    "sourceVolume": "video-editor",
+                    "containerPath": "/mnt/efs",
+                    "readOnly": false
+                }
+            ],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/video-editor",
+                    "awslogs-create-group": "true",
+                    "awslogs-region": "us-east-1",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            },
+            "systemControls": []
+        },
+        {
+            "name": "nginx",
+            "image": "<account-id>.dkr.ecr.us-east-1.amazonaws.com/video-editor:nginx-v1.0.0",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "name": "nginx-80-tcp",
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": false,
+            "environment": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://127.0.0.1/ || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 60
+            },
+            "systemControls": []
+        }
+    ],
+    "taskRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole",
+    "executionRoleArn": "arn:aws:iam::<account-id>:role/ecsTaskExecutionRole",
+    "networkMode": "awsvpc",
+    "volumes": [
+        {
+            "name": "video-editor",
+            "efsVolumeConfiguration": {
+                "fileSystemId": "<file-system-id>",
+                "rootDirectory": "/",
+                "transitEncryption": "ENABLED"
+            }
+        }
+    ],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "2048",
+    "runtimePlatform": {
+        "cpuArchitecture": "ARM64",
+        "operatingSystemFamily": "LINUX"
+    }
+}

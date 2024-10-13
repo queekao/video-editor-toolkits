@@ -1,6 +1,6 @@
 version: "3"
 services:
-  server:
+  node-server:
     environment:
       - IS_DOCKER=true
     build:
@@ -21,7 +21,7 @@ services:
     networks:
       - app-network
     depends_on:
-      - server
+      - node-server
   redis:
     image: redis
     ports:
